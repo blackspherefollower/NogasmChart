@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.IO.Ports;
 using System.Text.RegularExpressions;
@@ -11,7 +12,7 @@ namespace NogasmChart
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, IDisposable
     {
         private SerialPort port = null;
         ObservableCollection<double> average = new ObservableCollection<double>();
@@ -36,6 +37,18 @@ namespace NogasmChart
 
         private void StartStop_Click(object sender, RoutedEventArgs e)
         {
+            void exceptHandle(Exception ex)
+            {
+                ComPort.IsEnabled = true;
+                MessageBox.Show("Error opening com port", ex.Message, MessageBoxButton.OK, MessageBoxImage.Error);
+                Console.WriteLine($"Exception on port open: {ex.Message}\n{ex.StackTrace}");
+                port?.Close();
+                port = null;
+                w?.WriteLine($"Exception on port open: {ex.Message}\n{ex.StackTrace}");
+                w.Close();
+                w = null;
+            }
+
             if (port == null)
             {
                 ComPort.IsEnabled = false;
@@ -47,16 +60,21 @@ namespace NogasmChart
                     startTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     w = File.AppendText($"nogasm.{DateTime.UtcNow.ToLongDateString()}.log");
                 }
-                catch (Exception ex)
+                catch (IOException ex)
                 {
-                    ComPort.IsEnabled = true;
-                    MessageBox.Show("Error opening com port", ex.Message, MessageBoxButton.OK, MessageBoxImage.Error);
-                    Console.WriteLine($"Exception on port open: {ex.Message}\n{ex.StackTrace}");
-                    port?.Close();
-                    port = null;
-                    w?.WriteLine($"Exception on port open: {ex.Message}\n{ex.StackTrace}");
-                    w.Close();
-                    w = null;
+                    exceptHandle(ex);
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    exceptHandle(ex);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    exceptHandle(ex);
+                }
+                catch (ArgumentException ex)
+                {
+                    exceptHandle(ex);
                 }
             }
             else
@@ -104,9 +122,9 @@ namespace NogasmChart
                     Match m = nogasmRegex.Match(line);
                     if (m.Success)
                     {
-                        average.Add(Convert.ToDouble(m.Groups[1].Value));
-                        presure.Add(Convert.ToDouble(m.Groups[3].Value));
-                        vibe.Add(Convert.ToDouble(m.Groups[5].Value));
+                        average.Add(Convert.ToDouble(m.Groups[1].Value, new NumberFormatInfo()));
+                        presure.Add(Convert.ToDouble(m.Groups[3].Value, new NumberFormatInfo()));
+                        vibe.Add(Convert.ToDouble(m.Groups[5].Value, new NumberFormatInfo()));
                         time.Add(now);
                     }
                 }
@@ -115,6 +133,18 @@ namespace NogasmChart
                 PressureGraph.Plot(time, presure);
                 MototGraph.Plot(time, vibe);
             });
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool full)
+        {
+            w?.Dispose();
+            port?.Dispose();
         }
     }
 }
