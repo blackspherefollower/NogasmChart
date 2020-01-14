@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.2019
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29609.76
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtogasmChart", "ProtogasmChart\ProtogasmChart.csproj", "{F2EE6B28-3A8A-423F-BB2D-EF11F8A2A880}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NogasmChart", "NogasmChart\NogasmChart.csproj", "{F2EE6B28-3A8A-423F-BB2D-EF11F8A2A880}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

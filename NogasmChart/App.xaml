@@ -1,7 +1,7 @@
-﻿<Application x:Class="ProtogasmChart.App"
+﻿<Application x:Class="NogasmChart.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:ProtogasmChart"
+             xmlns:local="clr-namespace:NogasmChart"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
          

@@ -1,0 +1,32 @@
+﻿<Window x:Class="NogasmChart.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:NogasmChart"
+        xmlns:wpf="clr-namespace:InteractiveDataDisplay.WPF;assembly=InteractiveDataDisplay.WPF"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <wpf:Chart BottomTitle="Argument" LeftTitle="Value" Grid.Row="0" Grid.ColumnSpan="3">
+            <Grid Name="Lines" >
+                <wpf:LineGraph x:Name="AverageGraph" Description="Average Pressure" Stroke="Green" StrokeThickness="1"/>
+                <wpf:LineGraph x:Name="PressureGraph" Description="Current Pressure" Stroke="Blue" StrokeThickness="1"/>
+                <wpf:LineGraph x:Name="MototGraph" Description="Motor" Stroke="Red" StrokeThickness="1"/>
+            </Grid>
+        </wpf:Chart>
+        <Button Grid.Row="1" Grid.ColumnSpan="3" Name="Orgasm" Content="Orgasm" Click="Orgasm_Click" Height="60"/>
+        <Button Grid.Row="2" Grid.Column="0" Name="StartStop" Content="Start/Stop" Click="StartStop_Click"/>
+        <ComboBox Grid.Row="2" Grid.Column="1" Name="ComPort" />
+</Grid>
+</Window>
