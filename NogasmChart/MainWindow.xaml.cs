@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Ports;
 using System.Text.RegularExpressions;
 using System.Windows;
+using InteractiveDataDisplay.WPF;
 
 namespace NogasmChart
 {
@@ -18,7 +19,7 @@ namespace NogasmChart
         ObservableCollection<double> vibe = new ObservableCollection<double>();
         ObservableCollection<double> time = new ObservableCollection<double>();
         private string _buffer = "";
-        private StreamWriter w = File.AppendText("nogasm.log");
+        private StreamWriter w = null;
         private long startTime = 0;
         private readonly Regex nogasmRegex = new Regex(@"^(-?\d+(\.\d+)?),(\d+(\.\d+)?),(\d+(\.\d+)?)$");
 
@@ -44,6 +45,7 @@ namespace NogasmChart
                     port.DataReceived += PortOnDataReceived;
                     port.Open();
                     startTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                    w = File.AppendText($"nogasm.{DateTime.UtcNow.ToLongDateString()}.log");
                 }
                 catch (Exception ex)
                 {
@@ -52,6 +54,9 @@ namespace NogasmChart
                     Console.WriteLine($"Exception on port open: {ex.Message}\n{ex.StackTrace}");
                     port?.Close();
                     port = null;
+                    w?.WriteLine($"Exception on port open: {ex.Message}\n{ex.StackTrace}");
+                    w.Close();
+                    w = null;
                 }
             }
             else
@@ -60,13 +65,25 @@ namespace NogasmChart
                 port = null;
                 w.Flush();
                 ComPort.IsEnabled = true;
+                w.Close();
+                w = null;
             }
         }
 
         private void Orgasm_Click(object sender, RoutedEventArgs e)
         {
             // Record the time of orgasm
-            Console.WriteLine(DateTimeOffset.Now.ToUnixTimeMilliseconds() - startTime + ": Orgasm");
+            var time = DateTimeOffset.Now.ToUnixTimeMilliseconds() - startTime;
+            var text = time + ":user:Orgasm";
+            Console.WriteLine(text);
+            w?.WriteLine(text);
+            var oGraph = new LineGraph();
+            oGraph.Description = "Orgasm";
+            Dispatcher.Invoke(() =>
+            {
+                Lines.Children.Add(oGraph);
+                oGraph.Plot( new double[] { time, time }, new double[] { 0, 4000 });
+            });
         }
 
         private void PortOnDataReceived(object sender, SerialDataReceivedEventArgs e)
@@ -81,8 +98,9 @@ namespace NogasmChart
                     _buffer = _buffer.Substring(off+1);
 
                     var now = DateTimeOffset.Now.ToUnixTimeMilliseconds() - startTime;
-                    Console.WriteLine(now + ":" + line);
-                    w.WriteLine(now + ":" + line);
+                    var text = now + ":nogasm:" + line;
+                    Console.WriteLine(text);
+                    w?.WriteLine(text);
                     Match m = nogasmRegex.Match(line);
                     if (m.Success)
                     {
