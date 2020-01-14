@@ -23,6 +23,7 @@ namespace NogasmChart
         private StreamWriter w = null;
         private long startTime = 0;
         private readonly Regex nogasmRegex = new Regex(@"^(-?\d+(\.\d+)?),(\d+(\.\d+)?),(\d+(\.\d+)?)$");
+        private DateTimeOffset last = DateTimeOffset.Now;
 
         public MainWindow()
         {
@@ -97,7 +98,7 @@ namespace NogasmChart
             w?.WriteLine(text);
             var oGraph = new LineGraph();
             oGraph.Description = "Orgasm";
-            Dispatcher.Invoke(() =>
+            Dispatcher?.Invoke(() =>
             {
                 Lines.Children.Add(oGraph);
                 oGraph.Plot( new double[] { time, time }, new double[] { 0, 4000 });
@@ -106,33 +107,37 @@ namespace NogasmChart
 
         private void PortOnDataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-            Dispatcher.Invoke(() =>
+            _buffer += port.ReadExisting().Replace("\r", "");
+            var off = 0;
+            while ((off = _buffer.IndexOf('\n')) != -1)
             {
-                _buffer += port.ReadExisting().Replace("\r", "");
-                var off = 0;
-                while ((off = _buffer.IndexOf('\n')) != -1)
+                var line = _buffer.Substring(0, off);
+                _buffer = _buffer.Substring(off+1);
+
+                var now = DateTimeOffset.Now.ToUnixTimeMilliseconds() - startTime;
+                var text = now + ":nogasm:" + line;
+                Console.WriteLine(text);
+                w?.WriteLine(text);
+                Match m = nogasmRegex.Match(line);
+                if (m.Success)
                 {
-                    var line = _buffer.Substring(0, off);
-                    _buffer = _buffer.Substring(off+1);
-
-                    var now = DateTimeOffset.Now.ToUnixTimeMilliseconds() - startTime;
-                    var text = now + ":nogasm:" + line;
-                    Console.WriteLine(text);
-                    w?.WriteLine(text);
-                    Match m = nogasmRegex.Match(line);
-                    if (m.Success)
-                    {
-                        average.Add(Convert.ToDouble(m.Groups[1].Value, new NumberFormatInfo()));
-                        presure.Add(Convert.ToDouble(m.Groups[3].Value, new NumberFormatInfo()));
-                        vibe.Add(Convert.ToDouble(m.Groups[5].Value, new NumberFormatInfo()));
-                        time.Add(now);
-                    }
+                    average.Add(Convert.ToDouble(m.Groups[1].Value, new NumberFormatInfo()));
+                    presure.Add(Convert.ToDouble(m.Groups[3].Value, new NumberFormatInfo()));
+                    vibe.Add(Convert.ToDouble(m.Groups[5].Value, new NumberFormatInfo()));
+                    time.Add(now);
                 }
+            }
 
-                AverageGraph.Plot(time, average);
-                PressureGraph.Plot(time, presure);
-                MototGraph.Plot(time, vibe);
-            });
+            if (DateTimeOffset.Now.Subtract(last).TotalMilliseconds > 100)
+            {
+                last = DateTimeOffset.Now;
+                Dispatcher?.Invoke(() =>
+                {
+                    AverageGraph.Plot(time, average);
+                    PressureGraph.Plot(time, presure);
+                    MototGraph.Plot(time, vibe);
+                });
+            }
         }
 
         public void Dispose()
