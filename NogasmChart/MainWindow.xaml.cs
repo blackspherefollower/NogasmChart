@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.IO.Ports;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Forms;
 using InteractiveDataDisplay.WPF;
+using Application = System.Windows.Application;
+using MessageBox = System.Windows.MessageBox;
 
 namespace NogasmChart
 {
@@ -21,6 +25,7 @@ namespace NogasmChart
         ObservableCollection<double> time = new ObservableCollection<double>();
         private string _buffer = "";
         private StreamWriter w = null;
+        private string logFile = null;
         private long startTime = 0;
         private readonly Regex nogasmRegex = new Regex(@"^(-?\d+(\.\d+)?),(\d+(\.\d+)?),(\d+(\.\d+)?)$");
         private DateTimeOffset last = DateTimeOffset.Now;
@@ -32,6 +37,8 @@ namespace NogasmChart
             {
                 ComPort.Items.Add(portName);
             }
+
+            MenuFileSave.IsEnabled = false;
 
             ComPort.SelectedItem = SerialPort.GetPortNames();
         }
@@ -46,8 +53,11 @@ namespace NogasmChart
                 port?.Close();
                 port = null;
                 w?.WriteLine($"Exception on port open: {ex.Message}\n{ex.StackTrace}");
-                w.Close();
+                w?.Close();
                 w = null;
+                MenuFileSave.IsEnabled = true;
+                MenuFileNew.IsEnabled = true;
+                MenuFileOpen.IsEnabled = true;
             }
 
             if (port == null)
@@ -55,11 +65,20 @@ namespace NogasmChart
                 ComPort.IsEnabled = false;
                 try
                 {
+                    MenuFileSave.IsEnabled = false;
+                    MenuFileNew.IsEnabled = false;
+                    MenuFileOpen.IsEnabled = false;
+
+                    if (logFile == null)
+                    {
+                        logFile = $"nogasm.{DateTimeOffset.Now.ToUnixTimeMilliseconds()}.log";
+                        startTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+                    }
+
+                    w = File.AppendText(logFile);
                     port = new SerialPort((string) ComPort.SelectedItem, 115200);
                     port.DataReceived += PortOnDataReceived;
                     port.Open();
-                    startTime = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-                    w = File.AppendText($"nogasm.{DateTime.UtcNow.ToLongDateString()}.log");
                 }
                 catch (IOException ex)
                 {
@@ -82,10 +101,13 @@ namespace NogasmChart
             {
                 port?.Close();
                 port = null;
-                w.Flush();
+                w?.Flush();
                 ComPort.IsEnabled = true;
-                w.Close();
+                w?.Close();
                 w = null;
+                MenuFileSave.IsEnabled = true;
+                MenuFileNew.IsEnabled = true;
+                MenuFileOpen.IsEnabled = true;
             }
         }
 
@@ -137,6 +159,95 @@ namespace NogasmChart
                     PressureGraph.Plot(time, presure);
                     MototGraph.Plot(time, vibe);
                 });
+            }
+        }
+
+        private void MenuFileNew_Click(object sender, RoutedEventArgs e)
+        {
+            if (port != null)
+            {
+                StartStop_Click(sender, e);
+            }
+
+            logFile = null;
+            average = new ObservableCollection<double>();
+            presure = new ObservableCollection<double>();
+            vibe = new ObservableCollection<double>();
+            time = new ObservableCollection<double>();
+
+            last = DateTimeOffset.Now;
+            Dispatcher?.Invoke(() =>
+            {
+                AverageGraph.Plot(time, average);
+                PressureGraph.Plot(time, presure);
+                MototGraph.Plot(time, vibe);
+            });
+        }
+
+        private void MenuFileOpen_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void MenuFileSave_Click(object sender, RoutedEventArgs e)
+        {
+            if (logFile == null || !File.Exists(logFile))
+            {
+                MessageBox.Show("No data to save!", "NogasmChart Chart", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var save = new Microsoft.Win32.SaveFileDialog
+            {
+                FileName = logFile,
+                DefaultExt = ".log",
+                Filter = "Logs (.log)|*.log"
+            };
+
+            // Process save file dialog box results
+            if (save.ShowDialog() == true)
+            {
+                File.Copy(logFile, save.FileName, true);
+            }
+        }
+
+        private void MenuHelpAbout_Click(object sender, RoutedEventArgs e)
+        {
+            new AboutWindow().Show();
+        }
+
+        private void MenuFileExit_Click(object sender, RoutedEventArgs e)
+        {
+            var result =
+                MessageBox.Show(
+                    "Still receiving input! Are you sure you want to quit?",
+                    "Nogasm Chart",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                Application.Current.Shutdown();
+            }
+        }
+
+        void MainWindow_Closing(object sender, CancelEventArgs e)
+        {
+            if (port == null)
+            {
+                return;
+            }
+
+            var result =
+                MessageBox.Show(
+                    "Still receiving input! Are you sure you want to quit?",
+                    "Nogasm Chart",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+            if (result == MessageBoxResult.No)
+            {
+                // If user doesn't want to close, cancel closure
+                e.Cancel = true;
             }
         }
 
