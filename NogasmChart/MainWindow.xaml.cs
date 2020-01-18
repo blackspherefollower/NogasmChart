@@ -1,12 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.IO.Ports;
+using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows;
 using System.Windows.Forms;
+using Buttplug.Client;
+using Buttplug.Client.Connectors.WebsocketConnector;
+using Buttplug.Core.Messages;
 using InteractiveDataDisplay.WPF;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
@@ -19,16 +25,26 @@ namespace NogasmChart
     public partial class MainWindow : Window, IDisposable
     {
         private SerialPort port = null;
-        ObservableCollection<double> average = new ObservableCollection<double>();
-        ObservableCollection<double> presure = new ObservableCollection<double>();
-        ObservableCollection<double> vibe = new ObservableCollection<double>();
-        ObservableCollection<double> time = new ObservableCollection<double>();
+        List<double> average = new List<double>();
+        List<double> presure = new List<double>();
+        List<double> vibe = new List<double>();
+        List<double> time = new List<double>();
+
+        List<double> output = new List<double>();
+        List<double> outtime = new List<double>();
         private string _buffer = "";
         private StreamWriter w = null;
         private string logFile = null;
         private long startTime = 0;
         private readonly Regex nogasmRegex = new Regex(@"^(-?\d+(\.\d+)?),(\d+(\.\d+)?),(\d+(\.\d+)?)$");
-        private DateTimeOffset last = DateTimeOffset.Now;
+        private DateTimeOffset _last_input = DateTimeOffset.Now;
+        private DateTimeOffset _last_output = DateTimeOffset.Now;
+
+        public event EventHandler<NogasmDataPointArgs> OnNogasmDataPoint;
+        public event EventHandler<OrgasmDataPointArgs> OnOrgasmDataPoint;
+
+        private IInputAnalyser _analyser = null;
+        private ButtplugClient _client;
 
         public MainWindow()
         {
@@ -41,6 +57,52 @@ namespace NogasmChart
             MenuFileSave.IsEnabled = false;
 
             ComPort.SelectedItem = SerialPort.GetPortNames();
+
+            // ToDo: Make this selectable
+            _analyser = new NogasmMotorDirectAnalyser();
+            _analyser.OutputChange += AnalyserOnOutputChange;
+            OnOrgasmDataPoint += _analyser.HandleOrgasmData;
+            var nogasmAnalyser = (INogasmInputAnalyser) _analyser;
+            if (nogasmAnalyser != null)
+            {
+                OnNogasmDataPoint += nogasmAnalyser.HandleNogasmData;
+            }
+        }
+
+        private void AnalyserOnOutputChange(object sender, OutputChangeArgs e)
+        {
+            output.Add(e.Intensity * 1000);
+            outtime.Add(DateTimeOffset.Now.ToUnixTimeMilliseconds() - startTime);
+
+            if (output.Count > 10000)
+            {
+                var range = output.Count - 1000;
+                output.RemoveRange(0, range);
+                outtime.RemoveRange(0, range);
+            }
+
+            if (DateTimeOffset.Now.Subtract(_last_output).TotalMilliseconds > 100)
+            {
+                _last_output = DateTimeOffset.Now;
+                Dispatcher?.Invoke(() =>
+                {
+                    OutputGraph.Plot(outtime, output);
+                });
+
+                if (_client?.Connected ?? false)
+                {
+                    var vibes = _client.Devices.Where(d => d.AllowedMessages.ContainsKey(typeof(VibrateCmd)) && !d.Name.Contains("Vibratis")).ToList();
+                    foreach (var vibe in vibes)
+                    {
+                        vibe.SendVibrateCmd(e.Intensity);
+                    }
+                    var rotators = _client.Devices.Where(d => d.AllowedMessages.ContainsKey(typeof(RotateCmd))).ToList();
+                    foreach (var rotator in rotators)
+                    {
+                        rotator.SendRotateCmd(e.Intensity, true);
+                    }
+                }
+            }
         }
 
         private void StartStop_Click(object sender, RoutedEventArgs e)
@@ -124,6 +186,7 @@ namespace NogasmChart
             {
                 Lines.Children.Add(oGraph);
                 oGraph.Plot( new double[] { time, time }, new double[] { 0, 4000 });
+                OnOrgasmDataPoint?.Invoke(this, new OrgasmDataPointArgs(time));
             });
         }
 
@@ -143,16 +206,30 @@ namespace NogasmChart
                 Match m = nogasmRegex.Match(line);
                 if (m.Success)
                 {
-                    average.Add(Convert.ToDouble(m.Groups[1].Value, new NumberFormatInfo()));
+                    average.Add(Convert.ToDouble(m.Groups[5].Value, new NumberFormatInfo()));
                     presure.Add(Convert.ToDouble(m.Groups[3].Value, new NumberFormatInfo()));
-                    vibe.Add(Convert.ToDouble(m.Groups[5].Value, new NumberFormatInfo()));
+                    vibe.Add(Convert.ToDouble(m.Groups[1].Value, new NumberFormatInfo()));
                     time.Add(now);
+                    OnNogasmDataPoint?.Invoke(this, new NogasmDataPointArgs(now, 
+                        Convert.ToDouble(m.Groups[3].Value, new NumberFormatInfo()), 
+                        Convert.ToDouble(m.Groups[5].Value, new NumberFormatInfo()), 
+                        Convert.ToDouble(m.Groups[1].Value, new NumberFormatInfo())));
+
+                    if (average.Count > 10000)
+                    {
+                        var range = average.Count - 1000;
+                        average.RemoveRange(0, range);
+                        presure.RemoveRange(0, range);
+                        vibe.RemoveRange(0, range);
+                        time.RemoveRange(0, range);
+                    }
+
                 }
             }
 
-            if (DateTimeOffset.Now.Subtract(last).TotalMilliseconds > 100)
+            if (DateTimeOffset.Now.Subtract(_last_input).TotalMilliseconds > 100)
             {
-                last = DateTimeOffset.Now;
+                _last_input = DateTimeOffset.Now;
                 Dispatcher?.Invoke(() =>
                 {
                     AverageGraph.Plot(time, average);
@@ -170,17 +247,21 @@ namespace NogasmChart
             }
 
             logFile = null;
-            average = new ObservableCollection<double>();
-            presure = new ObservableCollection<double>();
-            vibe = new ObservableCollection<double>();
-            time = new ObservableCollection<double>();
+            average = new List<double>();
+            presure = new List<double>();
+            vibe = new List<double>();
+            time = new List<double>();
 
-            last = DateTimeOffset.Now;
+            output = new List<double>();
+            outtime = new List<double>();
+
+            _last_input = DateTimeOffset.Now;
             Dispatcher?.Invoke(() =>
             {
                 AverageGraph.Plot(time, average);
                 PressureGraph.Plot(time, presure);
                 MototGraph.Plot(time, vibe);
+                OutputGraph.Plot(outtime, output);
             });
         }
 
@@ -248,6 +329,49 @@ namespace NogasmChart
             {
                 // If user doesn't want to close, cancel closure
                 e.Cancel = true;
+            }
+        }
+
+        private async void Buttplug_Click(object sender, RoutedEventArgs e)
+        {
+            if (_client == null)
+            {
+                //ToDo: Make this customizable
+                _client = new ButtplugClient("NogasmChart", new ButtplugWebsocketConnector(new Uri("ws://localhost:12345")));
+                _client.ServerDisconnect += (o, args) =>
+                {
+                    _client = null;
+                };
+                _client.ErrorReceived += (o, args) =>
+                {
+                    var time = DateTimeOffset.Now.ToUnixTimeMilliseconds() - startTime;
+                    var text = time + ":buttplug:" + args.Exception.ButtplugErrorMessage.ErrorCode + ": " +
+                               args.Exception.ButtplugErrorMessage.ErrorMessage;
+                    Console.WriteLine(text);
+                };
+
+                try
+                {
+                    await _client.ConnectAsync();
+                    await _client?.StartScanningAsync();
+                }
+                catch (Exception ex)
+                {
+                    _client = null;
+                }
+
+
+            }
+            else
+            {
+                try
+                {
+                    await _client?.DisconnectAsync();
+                }
+                finally
+                {
+                    _client = null;
+                }
             }
         }
 

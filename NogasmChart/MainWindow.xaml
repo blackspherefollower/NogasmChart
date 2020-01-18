@@ -37,11 +37,14 @@
                     <wpf:LineGraph x:Name="AverageGraph" Description="Average Pressure" Stroke="Green" StrokeThickness="1"/>
                     <wpf:LineGraph x:Name="PressureGraph" Description="Current Pressure" Stroke="Blue" StrokeThickness="1"/>
                     <wpf:LineGraph x:Name="MototGraph" Description="Motor" Stroke="Red" StrokeThickness="1"/>
+                    <wpf:LineGraph x:Name="OutputGraph" Description="Output" Stroke="Purple" StrokeThickness="1"/>
                 </Grid>
             </wpf:Chart>
             <Button Grid.Row="1" Grid.ColumnSpan="3" Name="Orgasm" Content="Orgasm" Click="Orgasm_Click" Height="60"/>
             <Button Grid.Row="2" Grid.Column="0" Name="StartStop" Content="Start/Stop" Click="StartStop_Click"/>
             <ComboBox Grid.Row="2" Grid.Column="1" Name="ComPort" />
+
+            <Button Grid.Row="2" Grid.Column="2" Name="Buttplug" Content="Connect to Intiface" Click="Buttplug_Click"/>
         </Grid>
     </DockPanel>
 </Window>
