@@ -37,6 +37,7 @@ namespace NogasmChart
         private string logFile = null;
         private long startTime = 0;
         private readonly Regex nogasmRegex = new Regex(@"^(-?\d+(\.\d+)?),(\d+(\.\d+)?),(\d+(\.\d+)?)$");
+        private readonly Regex logRegex = new Regex(@"^(\d+):(nogasm:|user:orgasm|output:)(.*)$");
         private DateTimeOffset _last_input = DateTimeOffset.Now;
         private DateTimeOffset _last_output = DateTimeOffset.Now;
 
@@ -71,19 +72,27 @@ namespace NogasmChart
 
         private void AnalyserOnOutputChange(object sender, OutputChangeArgs e)
         {
-            output.Add(e.Intensity * 1000);
-            outtime.Add(DateTimeOffset.Now.ToUnixTimeMilliseconds() - startTime);
-
-            if (output.Count > 10000)
-            {
-                var range = output.Count - 1000;
-                output.RemoveRange(0, range);
-                outtime.RemoveRange(0, range);
-            }
-
-            if (DateTimeOffset.Now.Subtract(_last_output).TotalMilliseconds > 100)
+            var last = output.Last() / 1000;
+            if (DateTimeOffset.Now.Subtract(_last_output).TotalMilliseconds > 100 || // throttle
+                (last > 0.01 && e.Intensity < 0.01) || // stop
+                Math.Abs(e.Intensity - last) > 0.25 ) // 25% change
             {
                 _last_output = DateTimeOffset.Now;
+                var t = _last_output.ToUnixTimeMilliseconds();
+                output.Add(e.Intensity * 1000);
+                outtime.Add(t - startTime);
+
+                var text = t + ":output:" + e.Intensity;
+                Console.WriteLine(text);
+                w?.WriteLine(text);
+
+                if (output.Count > 10000)
+                {
+                    var range = output.Count - 1000;
+                    output.RemoveRange(0, range);
+                    outtime.RemoveRange(0, range);
+                }
+
                 Dispatcher?.Invoke(() =>
                 {
                     OutputGraph.Plot(outtime, output);
@@ -177,7 +186,7 @@ namespace NogasmChart
         {
             // Record the time of orgasm
             var time = DateTimeOffset.Now.ToUnixTimeMilliseconds() - startTime;
-            var text = time + ":user:Orgasm";
+            var text = time + ":user:orgasm";
             Console.WriteLine(text);
             w?.WriteLine(text);
             var oGraph = new LineGraph();
@@ -203,7 +212,7 @@ namespace NogasmChart
                 var text = now + ":nogasm:" + line;
                 Console.WriteLine(text);
                 w?.WriteLine(text);
-                Match m = nogasmRegex.Match(line);
+                var m = nogasmRegex.Match(line);
                 if (m.Success)
                 {
                     average.Add(Convert.ToDouble(m.Groups[5].Value, new NumberFormatInfo()));
@@ -255,6 +264,20 @@ namespace NogasmChart
             output = new List<double>();
             outtime = new List<double>();
 
+            var oGraphs = new List<LineGraph>();
+            foreach (var graph in Lines.Children)
+            {
+                if (graph is LineGraph g && g.Description.Contains("Orgasm"))
+                {
+                    oGraphs.Add(g);
+                }
+            }
+
+            foreach (var g in oGraphs)
+            {
+                Lines.Children.Remove(g);
+            }
+
             _last_input = DateTimeOffset.Now;
             Dispatcher?.Invoke(() =>
             {
@@ -267,7 +290,139 @@ namespace NogasmChart
 
         private void MenuFileOpen_Click(object sender, RoutedEventArgs e)
         {
+            //ToDo: Dirty check
 
+            var open = new Microsoft.Win32.OpenFileDialog
+            {
+                DefaultExt = ".log",
+                Filter = "Logs (.log)|*.log"
+            };
+
+            // Process save file dialog box results
+            if (open.ShowDialog() == true)
+            {
+                if (port != null)
+                {
+                    StartStop_Click(sender, e);
+                }
+
+                logFile = null;
+                average = new List<double>();
+                presure = new List<double>();
+                vibe = new List<double>();
+                time = new List<double>();
+
+                output = new List<double>();
+                outtime = new List<double>();
+
+                var oGraphs = new List<LineGraph>();
+                foreach (var graph in Lines.Children)
+                {
+                    if (graph is LineGraph g && g.Description.Contains("Orgasm"))
+                    {
+                        oGraphs.Add(g);
+                    }
+                }
+
+                foreach (var g in oGraphs)
+                {
+                    Lines.Children.Remove(g);
+                }
+
+                _last_input = DateTimeOffset.Now;
+                Dispatcher?.Invoke(() =>
+                {
+                    AverageGraph.Plot(time, average);
+                    PressureGraph.Plot(time, presure);
+                    MototGraph.Plot(time, vibe);
+                    OutputGraph.Plot(outtime, output);
+                });
+
+                //ToDo: Background this?
+                StreamReader stream = null;
+                try
+                {
+                    stream = new StreamReader(File.OpenRead(open.FileName));
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error on opening file: {ex.Message}", "Error Opening File", MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+
+                try
+                {
+                    string line;
+                    while ((line = stream?.ReadLine()) != null)
+                    {
+                        //ToDo: Abstract log event consumer
+                        var m = logRegex.Match(line.ToLower(CultureInfo.CurrentCulture));
+                        if (m.Success)
+                        {
+                            if (!long.TryParse(m.Groups[1].Value, out var t)) continue;
+
+                            switch (m.Groups[2].Value)
+                            {
+                                case "nogasm:":
+                                    var m2 = nogasmRegex.Match(m.Groups[3].Value);
+                                    if (m2.Success)
+                                    {
+                                        average.Add(Convert.ToDouble(m2.Groups[5].Value, new NumberFormatInfo()));
+                                        presure.Add(Convert.ToDouble(m2.Groups[3].Value, new NumberFormatInfo()));
+                                        vibe.Add(Convert.ToDouble(m2.Groups[1].Value, new NumberFormatInfo()));
+                                        time.Add(t);
+
+                                        if (time.Count > 2 &&
+                                            Math.Abs(average[average.Count - 2] - average[average.Count - 1]) < 0.001 &&
+                                            Math.Abs(presure[presure.Count - 2] - presure[presure.Count - 1]) < 0.001 &&
+                                            Math.Abs(vibe[vibe.Count - 2] - vibe[vibe.Count - 1]) < 0.001)
+                                        {
+                                            time.RemoveAt(time.Count - 1);
+                                            average.RemoveAt(time.Count - 1);
+                                            presure.RemoveAt(time.Count - 1);
+                                            vibe.RemoveAt(time.Count - 1);
+                                        }
+                                    }
+
+                                    break;
+
+                                case "user:orgasm":
+                                    var oGraph = new LineGraph();
+                                    oGraph.Description = "Orgasm";
+                                    Dispatcher?.Invoke(() =>
+                                    {
+                                        Lines.Children.Add(oGraph);
+                                        oGraph.Plot(new double[] {t, t}, new double[] {0, 4000});
+                                    });
+                                    break;
+
+                                case "output:":
+                                    if (double.TryParse(m.Groups[3].Value, out var val))
+                                    {
+                                        output.Add(val * 1000);
+                                        outtime.Add(t);
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+
+                    Dispatcher?.Invoke(() =>
+                    {
+                        AverageGraph.Plot(time, average);
+                        PressureGraph.Plot(time, presure);
+                        MototGraph.Plot(time, vibe);
+                        OutputGraph.Plot(outtime, output);
+                    });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error parsing file: {ex.Message}", "Error Opening File", MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+
+                stream?.Close();
+            }
         }
 
         private void MenuFileSave_Click(object sender, RoutedEventArgs e)
