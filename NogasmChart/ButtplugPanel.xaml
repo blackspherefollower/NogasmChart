@@ -1,0 +1,54 @@
+﻿<UserControl x:Class="NogasmChart.ButtplugPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:NogasmChart"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800" Padding="5px">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <GroupBox Grid.Row="0"  Header="Intiface Connection">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Label Grid.Column="0" Grid.Row="0">Connection Mode:</Label>
+                <ComboBox Grid.Column="0" Grid.Row="1" Name="ButtplugConnType" SelectionChanged="ButtplugConnType_SelectionChanged">
+                    <ComboBoxItem Content="WebSocket"/>
+                    <ComboBoxItem Content="Embedded"/>
+                    <ComboBoxItem Content="IPC"/>
+                </ComboBox>
+                <Label Grid.Column="1" Grid.Row="0">URL or Pipe Name:</Label>
+                <TextBox Grid.Column="1" Grid.Row="1" Name="ButtplugTarget"/>
+                <Button Grid.Column="2" Grid.Row="1" Content="Connect" Name="Connect" Click="Connect_Click"/>
+            </Grid>
+        </GroupBox>
+        <Label Grid.Row="1">Devices:</Label>
+        <ListView Grid.Row="2" Name="DevicesTree">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <WrapPanel>
+                        <CheckBox IsChecked="{Binding Path=Value.Enabled}"/>
+                        <TextBlock Text="{Binding Path=Value.Name}" Name="DeviceName"/>
+                    </WrapPanel>
+                    <DataTemplate.Triggers>
+                        <DataTrigger Binding="{Binding Path=Value.IsConnected}" Value="False">
+                            <Setter Property="Foreground" TargetName="DeviceName" Value="Gray"/>
+                        </DataTrigger>
+                    </DataTemplate.Triggers>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </Grid>
+</UserControl>

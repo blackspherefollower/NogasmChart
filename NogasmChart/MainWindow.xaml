@@ -6,9 +6,9 @@
         xmlns:local="clr-namespace:NogasmChart"
         xmlns:wpf="clr-namespace:InteractiveDataDisplay.WPF;assembly=InteractiveDataDisplay.WPF"
         mc:Ignorable="d"
-        Title="Nogasmn Graph" Height="450" Width="800"
+        Title="Nogasm Graph" Height="450" Width="800"
         Closing="MainWindow_Closing"  >
-    <DockPanel>
+    <DockPanel >
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
                 <MenuItem Header="_New" Click="MenuFileNew_Click" Name="MenuFileNew"/>
@@ -29,10 +29,10 @@
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <wpf:Chart BottomTitle="Argument" LeftTitle="Value" Grid.Row="0" Grid.ColumnSpan="3">
+            <wpf:Chart BottomTitle="Argument" LeftTitle="Value" Grid.Row="0" Grid.ColumnSpan="2">
                 <Grid Name="Lines" >
                     <wpf:LineGraph x:Name="AverageGraph" Description="Average Pressure" Stroke="Green" StrokeThickness="1"/>
                     <wpf:LineGraph x:Name="PressureGraph" Description="Current Pressure" Stroke="Blue" StrokeThickness="1"/>
@@ -40,11 +40,10 @@
                     <wpf:LineGraph x:Name="OutputGraph" Description="Output" Stroke="Purple" StrokeThickness="1"/>
                 </Grid>
             </wpf:Chart>
-            <Button Grid.Row="1" Grid.ColumnSpan="3" Name="Orgasm" Content="Orgasm" Click="Orgasm_Click" Height="60"/>
+            <Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Name="Orgasm" Content="Orgasm" Click="Orgasm_Click" Height="60"/>
             <Button Grid.Row="2" Grid.Column="0" Name="StartStop" Content="Start/Stop" Click="StartStop_Click"/>
             <ComboBox Grid.Row="2" Grid.Column="1" Name="ComPort" />
-
-            <Button Grid.Row="2" Grid.Column="2" Name="Buttplug" Content="Connect to Intiface" Click="Buttplug_Click"/>
+            <local:ButtplugPanel Grid.Row="0" Grid.Column="2" Grid.RowSpan="3" x:Name="ButtplugPanel"/>
         </Grid>
     </DockPanel>
 </Window>

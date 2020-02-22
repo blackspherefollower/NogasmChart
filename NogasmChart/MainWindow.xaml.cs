@@ -16,6 +16,7 @@ using Buttplug.Core.Messages;
 using InteractiveDataDisplay.WPF;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
+using Timer = System.Threading.Timer;
 
 namespace NogasmChart
 {
@@ -45,7 +46,6 @@ namespace NogasmChart
         public event EventHandler<OrgasmDataPointArgs> OnOrgasmDataPoint;
 
         private IInputAnalyser _analyser = null;
-        private ButtplugClient _client;
 
         public MainWindow()
         {
@@ -72,7 +72,12 @@ namespace NogasmChart
 
         private void AnalyserOnOutputChange(object sender, OutputChangeArgs e)
         {
-            var last = output.Last() / 1000;
+            var last = 0.0;
+            if (output.Any())
+            {
+                last = output.Last() / 1000;
+            }
+
             if (DateTimeOffset.Now.Subtract(_last_output).TotalMilliseconds > 100 || // throttle
                 (last > 0.01 && e.Intensity < 0.01) || // stop
                 Math.Abs(e.Intensity - last) > 0.25 ) // 25% change
@@ -98,19 +103,8 @@ namespace NogasmChart
                     OutputGraph.Plot(outtime, output);
                 });
 
-                if (_client?.Connected ?? false)
-                {
-                    var vibes = _client.Devices.Where(d => d.AllowedMessages.ContainsKey(typeof(VibrateCmd)) && !d.Name.Contains("Vibratis")).ToList();
-                    foreach (var vibe in vibes)
-                    {
-                        vibe.SendVibrateCmd(e.Intensity);
-                    }
-                    var rotators = _client.Devices.Where(d => d.AllowedMessages.ContainsKey(typeof(RotateCmd))).ToList();
-                    foreach (var rotator in rotators)
-                    {
-                        rotator.SendRotateCmd(e.Intensity, true);
-                    }
-                }
+                ButtplugPanel.SendVibrateCmd(e.Intensity);
+                ButtplugPanel.SendRotateCmd(e.Intensity, true);
             }
         }
 
@@ -484,49 +478,6 @@ namespace NogasmChart
             {
                 // If user doesn't want to close, cancel closure
                 e.Cancel = true;
-            }
-        }
-
-        private async void Buttplug_Click(object sender, RoutedEventArgs e)
-        {
-            if (_client == null)
-            {
-                //ToDo: Make this customizable
-                _client = new ButtplugClient("NogasmChart", new ButtplugWebsocketConnector(new Uri("ws://localhost:12345")));
-                _client.ServerDisconnect += (o, args) =>
-                {
-                    _client = null;
-                };
-                _client.ErrorReceived += (o, args) =>
-                {
-                    var time = DateTimeOffset.Now.ToUnixTimeMilliseconds() - startTime;
-                    var text = time + ":buttplug:" + args.Exception.ButtplugErrorMessage.ErrorCode + ": " +
-                               args.Exception.ButtplugErrorMessage.ErrorMessage;
-                    Console.WriteLine(text);
-                };
-
-                try
-                {
-                    await _client.ConnectAsync();
-                    await _client?.StartScanningAsync();
-                }
-                catch (Exception ex)
-                {
-                    _client = null;
-                }
-
-
-            }
-            else
-            {
-                try
-                {
-                    await _client?.DisconnectAsync();
-                }
-                finally
-                {
-                    _client = null;
-                }
             }
         }
 
