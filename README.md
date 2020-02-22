@@ -9,3 +9,15 @@ A session recorder tool for use with the [nogasm](https://github.com/nogasm/noga
 
 ![Screenshot](screenshot.png)
 
+## Features
+
+* Records the output from a Nogasm/Protogasm
+* Routes vibration intensity to Vibrators and/or Rotating devices to [Intiface](https://intiface.com/desktop/)
+* Recorded sessions can be reloaded
+
+## Roadmap
+
+* Reloaded sessions should be replayable
+* Output should support Linear actuator devices
+* Edging algorithms should be implementable and selectable in software
+* More input devices should be supported
