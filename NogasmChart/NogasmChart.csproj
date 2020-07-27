@@ -46,26 +46,32 @@
     <Reference Include="BouncyCastle.Crypto, Version=1.8.5.0, Culture=neutral, PublicKeyToken=0e99375e54769942">
       <HintPath>..\packages\BouncyCastle.1.8.5\lib\BouncyCastle.Crypto.dll</HintPath>
     </Reference>
-    <Reference Include="Buttplug, Version=0.5.6.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Buttplug.0.5.6\lib\netstandard2.0\Buttplug.dll</HintPath>
+    <Reference Include="Buttplug, Version=0.5.9.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Buttplug.0.5.9\lib\netstandard2.0\Buttplug.dll</HintPath>
     </Reference>
-    <Reference Include="Buttplug.Client.Connectors.WebsocketConnector, Version=0.5.6.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Buttplug.Client.Connectors.WebsocketConnector.0.5.6\lib\netstandard2.0\Buttplug.Client.Connectors.WebsocketConnector.dll</HintPath>
+    <Reference Include="Buttplug.Client.Connectors.WebsocketConnector, Version=0.5.9.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Buttplug.Client.Connectors.WebsocketConnector.0.5.9\lib\netstandard2.0\Buttplug.Client.Connectors.WebsocketConnector.dll</HintPath>
     </Reference>
-    <Reference Include="Buttplug.Server.Connectors.WebsocketServer, Version=0.5.6.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Buttplug.Server.Connectors.WebsocketServer.0.5.6\lib\netstandard2.0\Buttplug.Server.Connectors.WebsocketServer.dll</HintPath>
+    <Reference Include="Buttplug.Server.Connectors.WebsocketServer, Version=0.5.9.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Buttplug.Server.Connectors.WebsocketServer.0.5.9\lib\netstandard2.0\Buttplug.Server.Connectors.WebsocketServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Buttplug.Server.Managers.HidSharpManager, Version=0.5.9.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Buttplug.Server.Managers.HidSharpManager.0.5.9\lib\netstandard2.0\Buttplug.Server.Managers.HidSharpManager.dll</HintPath>
     </Reference>
     <Reference Include="deniszykov.WebSocketListener, Version=4.2.4.0, Culture=neutral, PublicKeyToken=7f78616efb4a208d, processorArchitecture=MSIL">
       <HintPath>..\packages\deniszykov.WebSocketListener.4.2.4\lib\net45\deniszykov.WebSocketListener.dll</HintPath>
     </Reference>
+    <Reference Include="HidSharp, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\HidSharp.2.1.0\lib\net35\HidSharp.dll</HintPath>
+    </Reference>
     <Reference Include="InteractiveDataDisplay.WPF, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\InteractiveDataDisplay.WPF.1.0.0\lib\net452\InteractiveDataDisplay.WPF.dll</HintPath>
     </Reference>
-    <Reference Include="IoTSharp.X509Extensions, Version=1.3.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\IoTSharp.X509Extensions.1.3.3\lib\net46\IoTSharp.X509Extensions.dll</HintPath>
+    <Reference Include="IoTSharp.X509Extensions, Version=1.4.9.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\IoTSharp.X509Extensions.1.4.9\lib\net46\IoTSharp.X509Extensions.dll</HintPath>
     </Reference>
-    <Reference Include="JetBrains.Annotations, Version=2019.1.3.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
-      <HintPath>..\packages\JetBrains.Annotations.2019.1.3\lib\net20\JetBrains.Annotations.dll</HintPath>
+    <Reference Include="JetBrains.Annotations, Version=2020.1.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
+      <HintPath>..\packages\JetBrains.Annotations.2020.1.0\lib\net20\JetBrains.Annotations.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis, Version=3.4.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.CodeAnalysis.Common.3.4.0\lib\netstandard2.0\Microsoft.CodeAnalysis.dll</HintPath>
@@ -76,14 +82,14 @@
     <Reference Include="Microsoft.Maps.MapControl.WPF, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Maps.MapControl.WPF.1.0.0.3\lib\net40-Client\Microsoft.Maps.MapControl.WPF.dll</HintPath>
     </Reference>
-    <Reference Include="Namotion.Reflection, Version=1.0.8.0, Culture=neutral, PublicKeyToken=c2f9c3bdfae56102, processorArchitecture=MSIL">
-      <HintPath>..\packages\Namotion.Reflection.1.0.8\lib\net45\Namotion.Reflection.dll</HintPath>
+    <Reference Include="Namotion.Reflection, Version=1.0.12.0, Culture=neutral, PublicKeyToken=c2f9c3bdfae56102, processorArchitecture=MSIL">
+      <HintPath>..\packages\Namotion.Reflection.1.0.12\lib\net45\Namotion.Reflection.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="NJsonSchema, Version=10.1.4.0, Culture=neutral, PublicKeyToken=c2f9c3bdfae56102, processorArchitecture=MSIL">
-      <HintPath>..\packages\NJsonSchema.10.1.4\lib\net45\NJsonSchema.dll</HintPath>
+    <Reference Include="NJsonSchema, Version=10.1.21.0, Culture=neutral, PublicKeyToken=c2f9c3bdfae56102, processorArchitecture=MSIL">
+      <HintPath>..\packages\NJsonSchema.10.1.21\lib\net45\NJsonSchema.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
@@ -121,7 +127,7 @@
       <HintPath>..\packages\System.Text.Encoding.CodePages.4.5.1\lib\net461\System.Text.Encoding.CodePages.dll</HintPath>
     </Reference>
     <Reference Include="System.Threading.Tasks.Dataflow, Version=4.6.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Threading.Tasks.Dataflow.4.11.0\lib\netstandard2.0\System.Threading.Tasks.Dataflow.dll</HintPath>
+      <HintPath>..\packages\System.Threading.Tasks.Dataflow.4.11.1\lib\net461\System.Threading.Tasks.Dataflow.dll</HintPath>
     </Reference>
     <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.3\lib\netstandard2.0\System.Threading.Tasks.Extensions.dll</HintPath>
