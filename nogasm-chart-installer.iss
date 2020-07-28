@@ -13,7 +13,7 @@ AppName=Nogasm Chart
 AppVersion={#Version}
 AppPublisher=blackspherefollower
 AppPublisherURL=https://github.com/blackspherefollower/NogasmChart
-AppId={{0a5b92f6-51e8-11e9-aa5c-0bbc873d2d19}
+AppId={{a5fe21fa-4937-4ff3-8fc1-b2c57e5be6ab}
 UsePreviousAppDir=yes
 DefaultDirName={pf}\NogasmChart
 Uninstallable=yes
@@ -23,6 +23,8 @@ OutputBaseFilename=nogasm-chart-installer
 OutputDir=.\installer
 LicenseFile=LICENSE
 
+[Dirs]
+Name: "{localappdata}\NogasmChart"
 
 [Files]
 Source: "NogasmChart\bin\{#Configuration}\*.exe"; DestDir: "{app}"
@@ -33,6 +35,10 @@ Source: "LICENSE"; DestDir: "{app}"; DestName: "License.txt"
 
 // [Run]
 // Filename: "{app}\Readme.txt"; Description: "View the README file"; Flags: postinstall shellexec unchecked
+
+
+[Icons]
+Name: "{commonprograms}\NogasmChart"; Filename: "{app}\NogasmChart.exe"
 
 [Code]
 
