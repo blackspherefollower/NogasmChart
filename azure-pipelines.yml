@@ -31,7 +31,7 @@ jobs:
       # Set up key after build start, otherwise we won't have nuget to update yet.
       - task: MagicChunks@2
         inputs:
-          sourcePath: '\secrets.json'
+          sourcePath: '$(Build.SourcesDirectory)\NogasmChart\secrets.json'
           fileType: 'Json'
           targetPathType: 'source'
           transformationType: 'json'
