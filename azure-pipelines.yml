@@ -52,7 +52,7 @@ jobs:
           FailOnWarning: false
           DisableTelemetry: true
           VersionNumber: "$(Build.BuildNumber)"
-          InformationalVersion: "$(gitVersion) $(buildConfiguration) $(Build.BuildNumber)"
+          InformationalVersion: "$(Build.BuildNumber)-$(gitVersion)-$(buildConfiguration)"
       - task: VSBuild@1
         displayName: "Build Project"
         inputs:
