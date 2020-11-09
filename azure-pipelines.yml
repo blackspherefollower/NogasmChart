@@ -31,7 +31,7 @@ jobs:
       # Set up key after build start, otherwise we won't have nuget to update yet.
       - task: MagicChunks@2
         inputs:
-          sourcePath: '$(Build.SourcesDirectory)\NogasmChart\secrets.json'
+          sourcePath: '\secrets.json'
           fileType: 'Json'
           targetPathType: 'source'
           transformationType: 'json'
@@ -53,6 +53,9 @@ jobs:
           DisableTelemetry: true
           VersionNumber: "$(Build.BuildNumber)"
           InformationalVersion: "$(Build.BuildNumber)-$(gitVersion)-$(buildConfiguration)"
+      - task: CmdLine@2
+        inputs:
+          script: 'type $(Build.SourcesDirectory)\NogasmChart\Properties\AssemblyInfo.cs'
       - task: VSBuild@1
         displayName: "Build Project"
         inputs:
