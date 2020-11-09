@@ -29,6 +29,19 @@ jobs:
         parameters:
           platform: "win-x64"
       # Set up key after build start, otherwise we won't have nuget to update yet.
+      - task: Assembly-Info-NetFramework@2
+        inputs:
+          Path: '$(Build.SourcesDirectory)'
+          FileNames: |
+            **\AssemblyInfo.cs
+            **\AssemblyInfo.vb
+          InsertAttributes: false
+          FileEncoding: 'auto'
+          WriteBOM: false
+          LogLevel: 'verbose'
+          FailOnWarning: false
+          DisableTelemetry: true
+          VersionNumber: "$(gitVersion) $(buildConfiguration) $(Build.BuildNumber)"
       - task: VSBuild@1
         displayName: "Build Project"
         inputs:
