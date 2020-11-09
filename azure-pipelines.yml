@@ -29,6 +29,16 @@ jobs:
         parameters:
           platform: "win-x64"
       # Set up key after build start, otherwise we won't have nuget to update yet.
+      - task: MagicChunks@2
+        inputs:
+          sourcePath: '$(Build.SourcesDirectory)\NogasmChart\secrets.json'
+          fileType: 'Json'
+          targetPathType: 'source'
+          transformationType: 'json'
+          transformations: |
+            {
+              "sentryUrl": "$(SENTRY_URL)"
+            }
       - task: Assembly-Info-NetFramework@2
         inputs:
           Path: '$(Build.SourcesDirectory)'
