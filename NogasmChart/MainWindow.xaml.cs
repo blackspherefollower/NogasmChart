@@ -57,7 +57,16 @@ namespace NogasmChart
 
             MenuFileSave.IsEnabled = false;
 
-            ComPort.SelectedItem = SerialPort.GetPortNames()[0];
+            if (SerialPort.GetPortNames().Any())
+            {
+                ComPort.SelectedItem = SerialPort.GetPortNames()[0];
+            }
+            else
+            {
+                ComPort.IsEnabled = false;
+                StartStop.IsEnabled = false;
+                Orgasm.IsEnabled = false;
+            }
 
             // ToDo: Make this selectable
             _analyser = new NogasmMotorDirectAnalyser();
