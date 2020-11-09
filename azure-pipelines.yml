@@ -51,8 +51,8 @@ jobs:
           LogLevel: 'verbose'
           FailOnWarning: false
           DisableTelemetry: true
-          VersionNumber: "0.0.$(Build.BuildNumber)"
-          InformationalVersion: "0.0.$(Build.BuildNumber)-$(gitVersion)-$(buildConfiguration)"
+          VersionNumber: "0.0.$(Build.BuildId)"
+          InformationalVersion: "0.0.$(Build.BuildId)-$(gitVersion)-$(buildConfiguration)"
       - task: CmdLine@2
         inputs:
           script: 'type $(Build.SourcesDirectory)\NogasmChart\Properties\AssemblyInfo.cs'
