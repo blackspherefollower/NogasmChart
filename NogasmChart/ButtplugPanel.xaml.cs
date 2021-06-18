@@ -6,14 +6,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using Buttplug.Client;
-using Buttplug.Client.Connectors;
-using Buttplug.Client.Connectors.WebsocketConnector;
-using Buttplug.Core;
-using Buttplug.Core.Logging;
-using Buttplug.Core.Messages;
-using Buttplug.Server;
-using DeviceAddedEventArgs = Buttplug.Client.DeviceAddedEventArgs;
+using Buttplug;
+
 
 namespace NogasmChart
 {
@@ -21,7 +15,7 @@ namespace NogasmChart
     /// <summary>
     /// Interaction logic for ButtplugPanel.xaml
     /// </summary>
-    public partial class ButtplugPanel : UserControl, INotifyPropertyChanged
+    public partial class ButtplugPanel : INotifyPropertyChanged
     {
         public class ButtplugPanelDevice
         {
@@ -40,21 +34,21 @@ namespace NogasmChart
                 Enabled = true;
                 IsConnected = true;
                 Device = aDev ?? throw new ArgumentNullException(nameof(aDev));
-                if (Device.AllowedMessages.TryGetValue(typeof(VibrateCmd), out var vAttrs) && vAttrs.FeatureCount != null)
+                if (Device.AllowedMessages.TryGetValue(ServerMessage.Types.MessageAttributeType.VibrateCmd, out var vAttrs))
                 {
                     for (uint i = 0; i < vAttrs.FeatureCount; i++)
                     {
                         Vibrators.Add(i, true);
                     }
                 }
-                if (Device.AllowedMessages.TryGetValue(typeof(RotateCmd), out var rAttrs) && rAttrs.FeatureCount != null)
+                if (Device.AllowedMessages.TryGetValue(ServerMessage.Types.MessageAttributeType.RotateCmd, out var rAttrs))
                 {
                     for (uint i = 0; i < rAttrs.FeatureCount; i++)
                     {
                         Rotators.Add(i, true);
                     }
                 }
-                if (Device.AllowedMessages.TryGetValue(typeof(LinearCmd), out var lAttrs) && lAttrs.FeatureCount != null)
+                if (Device.AllowedMessages.TryGetValue(ServerMessage.Types.MessageAttributeType.LinearCmd, out var lAttrs))
                 {
                     for (uint i = 0; i < lAttrs.FeatureCount; i++)
                     {
@@ -65,10 +59,8 @@ namespace NogasmChart
 
         }
 
-        private IButtplugLogManager _logManager = new ButtplugLogManager();
-        private DeviceManager _devManager = null;
-        private ButtplugClient _client = null;
-        internal ConcurrentDictionary<uint, ButtplugPanelDevice> Devices = new ConcurrentDictionary<uint, ButtplugPanelDevice>();
+        private ButtplugClient _client;
+        internal ObservableConcurrentDictionary<uint, ButtplugPanelDevice> Devices = new ObservableConcurrentDictionary<uint, ButtplugPanelDevice>();
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -86,14 +78,12 @@ namespace NogasmChart
                 case "WebSocket":
                     ButtplugTarget.Text = "ws://localhost:12345/buttplug";
                     ButtplugTarget.IsEnabled = true;
-                    break;
-                case "IPC":
-                    ButtplugTarget.Text = "ButtplugPort";
-                    ButtplugTarget.IsEnabled = true;
+                    ButtplugTarget.Visibility = Visibility.Visible;
                     break;
                 case "Embedded":
                     ButtplugTarget.Text = "";
                     ButtplugTarget.IsEnabled = false;
+                    ButtplugTarget.Visibility = Visibility.Collapsed;
                     break;
                 default:
                     ButtplugConnType.Text = "WebSocket";
@@ -101,7 +91,7 @@ namespace NogasmChart
             }
         }
 
-        private async void Connect_Click(object sender, System.Windows.RoutedEventArgs e)
+        private async void Connect_Click(object sender, RoutedEventArgs e)
         {
             Connect.IsEnabled = false;
 
@@ -111,72 +101,86 @@ namespace NogasmChart
                 {
                     await _client.StopScanningAsync();
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     // no-op: ignore failures, just stop if possible
                 }
 
                 await _client.DisconnectAsync();
                 _client = null;
-                Devices.Clear();
 
-                ButtplugConnType.IsEnabled = false;
+                var devs = Devices.Keys;
+                foreach (var dev in devs)
+                {
+                    Devices.Remove(dev);
+                }
+
+                ButtplugConnType.IsEnabled = true;
                 ButtplugConnType_SelectionChanged(this, null);
                 Connect.Content = "Connect";
                 Connect.IsEnabled = true;
+                Scan_Click(this, null);
                 return;
-            }
-
-            IButtplugClientConnector conn = null;
-            switch (((ComboBoxItem)ButtplugConnType.SelectedValue).Content)
-            {
-                case "WebSocket":
-                    try
-                    {
-                        conn = new ButtplugWebsocketConnector(new Uri(ButtplugTarget.Text));
-                    }
-                    catch (UriFormatException e1)
-                    {
-                        MessageBox.Show($"Uri Error: {e1.Message}", "Buttplug Error", MessageBoxButton.OK,
-                            MessageBoxImage.Error);
-                        Connect.IsEnabled = true;
-                        return;
-                    }
-
-                    ButtplugTarget.IsEnabled = false;
-                    ButtplugConnType.IsEditable = false;
-                    break;
-                case "IPC":
-                    ButtplugTarget.IsEnabled = false;
-                    ButtplugConnType.IsEditable = false;
-                    conn = new ButtplugClientIPCConnector(ButtplugTarget.Text);
-                    break;
-                case "Embedded":
-                    ButtplugTarget.Text = "";
-                    ButtplugTarget.IsEnabled = false;
-                    ButtplugConnType.IsEditable = false;
-                    if (_devManager == null)
-                    {
-                        _devManager = new DeviceManager(_logManager);
-                    }
-
-                    conn = new ButtplugEmbeddedConnector(new ButtplugServer("NogasmChart", 0, _devManager));
-                    break;
-                default:
-                    MessageBox.Show("Invalid Connection type!", "Buttplug Error", MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                    Connect.IsEnabled = true;
-                    return;
             }
 
             try
             {
-                _client = new ButtplugClient("NogasmChart", conn);
-                _client.DeviceAdded += ClientOnDeviceAdded;
-                _client.DeviceRemoved += ClientOnDeviceRemoved;
-                _client.ServerDisconnect += ClientOnServerDisconnect;
-                _client.ErrorReceived += ClientOnErrorReceived;
-                await _client.ConnectAsync();
+                switch (((ComboBoxItem)ButtplugConnType.SelectedValue).Content)
+                {
+                    case "WebSocket":
+                    {
+                        ButtplugTarget.IsEnabled = false;
+                        ButtplugConnType.IsEnabled = false;
+
+                        ButtplugWebsocketConnectorOptions conn;
+                        try
+                        {
+                            conn = new ButtplugWebsocketConnectorOptions(new Uri(ButtplugTarget.Text));
+                        }
+                        catch (UriFormatException e1)
+                        {
+                            MessageBox.Show($"Uri Error: {e1.Message}", "Buttplug Error", MessageBoxButton.OK,
+                                MessageBoxImage.Error);
+                            Connect.IsEnabled = true;
+                            ButtplugTarget.IsEnabled = true;
+                            ButtplugConnType_SelectionChanged(this, null);
+                            return;
+                        }
+
+                        _client = new ButtplugClient("NogasmChart");
+                        _client.DeviceAdded += ClientOnDeviceAdded;
+                        _client.DeviceRemoved += ClientOnDeviceRemoved;
+                        _client.ServerDisconnect += ClientOnServerDisconnect;
+                        _client.ErrorReceived += ClientOnErrorReceived;
+                        _client.ScanningFinished += ClientOnScanFinished;
+                        await _client.ConnectAsync(conn);
+
+                        break;
+                    }
+                    case "Embedded":
+                    {
+                        ButtplugTarget.IsEnabled = false;
+                        ButtplugConnType.IsEnabled = false;
+
+                        ButtplugEmbeddedConnectorOptions conn = new ButtplugEmbeddedConnectorOptions();
+                        conn.ServerName = "NogasmChart";
+
+                        _client = new ButtplugClient("NogasmChart");
+                        _client.DeviceAdded += ClientOnDeviceAdded;
+                        _client.DeviceRemoved += ClientOnDeviceRemoved;
+                        _client.ServerDisconnect += ClientOnServerDisconnect;
+                        _client.ErrorReceived += ClientOnErrorReceived;
+                        _client.ScanningFinished += ClientOnScanFinished;
+                        await _client.ConnectAsync(conn);
+
+                        break;
+                    }
+                    default:
+                        MessageBox.Show("Invalid Connection type!", "Buttplug Error", MessageBoxButton.OK,
+                            MessageBoxImage.Error);
+                        Connect.IsEnabled = true;
+                        return;
+                }
             }
             catch (Exception e1)
             {
@@ -184,10 +188,14 @@ namespace NogasmChart
                     MessageBoxImage.Error);
                 try
                 {
-                    await _client?.DisconnectAsync();
+                    if (_client != null)
+                    {
+                        await _client.DisconnectAsync();
+                    }
                 }
                 catch (Exception)
                 {
+                    // no-op: cleanup only
                 }
 
                 _client = null;
@@ -196,22 +204,64 @@ namespace NogasmChart
                 ButtplugConnType_SelectionChanged(this, null);
                 Connect.Content = "Connect";
                 Connect.IsEnabled = true;
+                Scan_Click(this, null);
                 return;
             }
 
             Connect.Content = "Disconnect";
             Connect.IsEnabled = true;
 
-
             try
             {
+                Scan.IsEnabled = false;
                 await _client.StartScanningAsync();
+                Scan.Content = "Stop Scanning";
+                Scan.IsEnabled = true;
             }
             catch (Exception e1)
             {
                 MessageBox.Show($"Something went wrong: {e1.Message}", "Buttplug Error", MessageBoxButton.OK,
                     MessageBoxImage.Warning);
             }
+        }
+
+        private async void ClientOnScanFinished(object sender, EventArgs e)
+        {
+            try
+            {
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    Scan.Content = "Scan";
+                });
+            }
+            catch (TaskCanceledException)
+            {
+                //no-op: app shutdown
+            }
+        }
+
+        private async void Scan_Click(object sender, EventArgs e)
+        {
+            Scan.IsEnabled = false;
+
+            if (_client == null)
+            {
+                Scan.Content = "Scan";
+                return;
+            }
+
+            if (_client.IsScanning)
+            {
+                await _client.StopScanningAsync();
+                Scan.Content = "Scan";
+            }
+            else
+            {
+                await _client.StartScanningAsync();
+                Scan.Content = "Stop Scanning";
+            }
+
+            Scan.IsEnabled = true;
         }
 
         private void ClientOnErrorReceived(object sender, ButtplugExceptionEventArgs e)
@@ -224,7 +274,10 @@ namespace NogasmChart
         {
             try
             {
-                await _client?.DisconnectAsync();
+                if (_client != null)
+                {
+                    await _client.DisconnectAsync();
+                }
             }
             catch (Exception)
             {
@@ -232,16 +285,21 @@ namespace NogasmChart
             }
 
             _client = null;
-            Devices.Clear();
+            var devs = Devices.Keys;
+            foreach (var dev in devs)
+            {
+                Devices.Remove(dev);
+            }
 
             try
             {
                 await Dispatcher.InvokeAsync(() =>
                 {
-                    ButtplugConnType.IsEnabled = false;
+                    ButtplugConnType.IsEnabled = true;
                     ButtplugConnType_SelectionChanged(this, null);
                     Connect.Content = "Connect";
                     Connect.IsEnabled = true;
+                    Scan_Click(this, null);
                 });
             }
             catch (TaskCanceledException)
@@ -261,19 +319,22 @@ namespace NogasmChart
 
         private void ClientOnDeviceAdded(object sender, DeviceAddedEventArgs e)
         {
-            Devices.AddOrUpdate(e.Device.Index, new ButtplugPanelDevice(e.Device), (i, dev) =>
+            if( Devices.TryGetValue(e.Device.Index, out var dev) )
             {
                 if (!dev.Name.Equals(e.Device.Name, StringComparison.Ordinal))
                 {
-                    return new ButtplugPanelDevice(e.Device);
+                    Devices.Remove(e.Device.Index);
+                    Devices.Add(e.Device.Index, new ButtplugPanelDevice(e.Device));
+                    return;
                 }
 
                 dev.Device = e.Device;
                 dev.IsConnected = true;
-                return dev;
-            });
-
-            Dispatcher.Invoke(() => { DevicesTree.Items.Refresh(); });
+            }
+            else
+            {
+                Devices.Add(e.Device.Index, new ButtplugPanelDevice(e.Device));
+            }
         }
 
         public void SendVibrateCmd(double aSpeed)

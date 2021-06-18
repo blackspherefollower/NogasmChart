@@ -1,31 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Windows;
-using System.Windows.Forms;
-using Buttplug.Client;
-using Buttplug.Client.Connectors.WebsocketConnector;
-using Buttplug.Core.Messages;
 using InteractiveDataDisplay.WPF;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
-using Timer = System.Threading.Timer;
 
 namespace NogasmChart
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, IDisposable
+    public partial class MainWindow : IDisposable
     {
-        private SerialPort port = null;
+        private SerialPort port;
         List<double> average = new List<double>();
         List<double> presure = new List<double>();
         List<double> vibe = new List<double>();
@@ -34,9 +27,9 @@ namespace NogasmChart
         List<double> output = new List<double>();
         List<double> outtime = new List<double>();
         private string _buffer = "";
-        private StreamWriter w = null;
-        private string logFile = null;
-        private long startTime = 0;
+        private StreamWriter w;
+        private string logFile;
+        private long startTime;
         private readonly Regex nogasmRegex = new Regex(@"^(-?\d+(\.\d+)?),(\d+(\.\d+)?),(\d+(\.\d+)?)$");
         private readonly Regex logRegex = new Regex(@"^(\d+):(nogasm:|user:orgasm|output:)(.*)$");
         private DateTimeOffset _last_input = DateTimeOffset.Now;
@@ -45,7 +38,7 @@ namespace NogasmChart
         public event EventHandler<NogasmDataPointArgs> OnNogasmDataPoint;
         public event EventHandler<OrgasmDataPointArgs> OnOrgasmDataPoint;
 
-        private IInputAnalyser _analyser = null;
+        private IInputAnalyser _analyser;
 
         public MainWindow()
         {
@@ -347,7 +340,7 @@ namespace NogasmChart
                 {
                     stream = new StreamReader(File.OpenRead(open.FileName));
                 }
-                catch (Exception ex)
+                catch (ArgumentException ex)
                 {
                     MessageBox.Show($"Error on opening file: {ex.Message}", "Error Opening File", MessageBoxButton.OK,
                         MessageBoxImage.Error);
@@ -418,7 +411,22 @@ namespace NogasmChart
                         OutputGraph.Plot(outtime, output);
                     });
                 }
-                catch (Exception ex)
+                catch (IOException ex)
+                {
+                    MessageBox.Show($"Error parsing file: {ex.Message}", "Error Opening File", MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+                catch (OutOfMemoryException ex)
+                {
+                    MessageBox.Show($"Error parsing file: {ex.Message}", "Error Opening File", MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+                catch (ArgumentNullException ex)
+                {
+                    MessageBox.Show($"Error parsing file: {ex.Message}", "Error Opening File", MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+                catch (RegexMatchTimeoutException ex)
                 {
                     MessageBox.Show($"Error parsing file: {ex.Message}", "Error Opening File", MessageBoxButton.OK,
                         MessageBoxImage.Error);
