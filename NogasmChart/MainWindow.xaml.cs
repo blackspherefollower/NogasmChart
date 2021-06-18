@@ -107,6 +107,7 @@ namespace NogasmChart
 
                 ButtplugPanel.SendVibrateCmd(e.Intensity);
                 ButtplugPanel.SendRotateCmd(e.Intensity, true);
+                ButtplugPanel.SendOscillateCmd(e.Intensity);
             }
         }
 
@@ -461,6 +462,11 @@ namespace NogasmChart
         private void MenuHelpAbout_Click(object sender, RoutedEventArgs e)
         {
             new AboutWindow().Show();
+        }
+
+        private void MenuProperties_Click(object sender, RoutedEventArgs e)
+        {
+            new SettingsDialog().Show();
         }
 
         private void MenuFileExit_Click(object sender, RoutedEventArgs e)

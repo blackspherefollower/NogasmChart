@@ -14,6 +14,8 @@
                 <MenuItem Header="_New" Click="MenuFileNew_Click" Name="MenuFileNew"/>
                 <MenuItem Header="_Open" Click="MenuFileOpen_Click" Name="MenuFileOpen" />
                 <MenuItem Header="_Save" Click="MenuFileSave_Click" Name="MenuFileSave" />
+                <!--<Separator />
+                <MenuItem Header="_Properties" Click="MenuProperties_Click" Name="MenuProperties" />-->
                 <Separator />
                 <MenuItem Header="_Exit" Click="MenuFileExit_Click" />
             </MenuItem>

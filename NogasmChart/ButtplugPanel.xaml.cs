@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -61,6 +62,12 @@ namespace NogasmChart
 
         private ButtplugClient _client;
         internal ObservableConcurrentDictionary<uint, ButtplugPanelDevice> Devices = new ObservableConcurrentDictionary<uint, ButtplugPanelDevice>();
+
+        // Oscillation properties
+        private object _oscillationLock = new object();
+        private double _oscillationSpeed;
+        private Timer _oscillationTimer;
+        private bool _oscillationDirection;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -128,53 +135,53 @@ namespace NogasmChart
                 switch (((ComboBoxItem)ButtplugConnType.SelectedValue).Content)
                 {
                     case "WebSocket":
-                    {
-                        ButtplugTarget.IsEnabled = false;
-                        ButtplugConnType.IsEnabled = false;
-
-                        ButtplugWebsocketConnectorOptions conn;
-                        try
                         {
-                            conn = new ButtplugWebsocketConnectorOptions(new Uri(ButtplugTarget.Text));
-                        }
-                        catch (UriFormatException e1)
-                        {
-                            MessageBox.Show($"Uri Error: {e1.Message}", "Buttplug Error", MessageBoxButton.OK,
-                                MessageBoxImage.Error);
-                            Connect.IsEnabled = true;
-                            ButtplugTarget.IsEnabled = true;
-                            ButtplugConnType_SelectionChanged(this, null);
-                            return;
-                        }
+                            ButtplugTarget.IsEnabled = false;
+                            ButtplugConnType.IsEnabled = false;
 
-                        _client = new ButtplugClient("NogasmChart");
-                        _client.DeviceAdded += ClientOnDeviceAdded;
-                        _client.DeviceRemoved += ClientOnDeviceRemoved;
-                        _client.ServerDisconnect += ClientOnServerDisconnect;
-                        _client.ErrorReceived += ClientOnErrorReceived;
-                        _client.ScanningFinished += ClientOnScanFinished;
-                        await _client.ConnectAsync(conn);
+                            ButtplugWebsocketConnectorOptions conn;
+                            try
+                            {
+                                conn = new ButtplugWebsocketConnectorOptions(new Uri(ButtplugTarget.Text));
+                            }
+                            catch (UriFormatException e1)
+                            {
+                                MessageBox.Show($"Uri Error: {e1.Message}", "Buttplug Error", MessageBoxButton.OK,
+                                    MessageBoxImage.Error);
+                                Connect.IsEnabled = true;
+                                ButtplugTarget.IsEnabled = true;
+                                ButtplugConnType_SelectionChanged(this, null);
+                                return;
+                            }
 
-                        break;
-                    }
+                            _client = new ButtplugClient("NogasmChart");
+                            _client.DeviceAdded += ClientOnDeviceAdded;
+                            _client.DeviceRemoved += ClientOnDeviceRemoved;
+                            _client.ServerDisconnect += ClientOnServerDisconnect;
+                            _client.ErrorReceived += ClientOnErrorReceived;
+                            _client.ScanningFinished += ClientOnScanFinished;
+                            await _client.ConnectAsync(conn);
+
+                            break;
+                        }
                     case "Embedded":
-                    {
-                        ButtplugTarget.IsEnabled = false;
-                        ButtplugConnType.IsEnabled = false;
+                        {
+                            ButtplugTarget.IsEnabled = false;
+                            ButtplugConnType.IsEnabled = false;
 
-                        ButtplugEmbeddedConnectorOptions conn = new ButtplugEmbeddedConnectorOptions();
-                        conn.ServerName = "NogasmChart";
+                            ButtplugEmbeddedConnectorOptions conn = new ButtplugEmbeddedConnectorOptions();
+                            conn.ServerName = "NogasmChart";
 
-                        _client = new ButtplugClient("NogasmChart");
-                        _client.DeviceAdded += ClientOnDeviceAdded;
-                        _client.DeviceRemoved += ClientOnDeviceRemoved;
-                        _client.ServerDisconnect += ClientOnServerDisconnect;
-                        _client.ErrorReceived += ClientOnErrorReceived;
-                        _client.ScanningFinished += ClientOnScanFinished;
-                        await _client.ConnectAsync(conn);
+                            _client = new ButtplugClient("NogasmChart");
+                            _client.DeviceAdded += ClientOnDeviceAdded;
+                            _client.DeviceRemoved += ClientOnDeviceRemoved;
+                            _client.ServerDisconnect += ClientOnServerDisconnect;
+                            _client.ErrorReceived += ClientOnErrorReceived;
+                            _client.ScanningFinished += ClientOnScanFinished;
+                            await _client.ConnectAsync(conn);
 
-                        break;
-                    }
+                            break;
+                        }
                     default:
                         MessageBox.Show("Invalid Connection type!", "Buttplug Error", MessageBoxButton.OK,
                             MessageBoxImage.Error);
@@ -319,7 +326,7 @@ namespace NogasmChart
 
         private void ClientOnDeviceAdded(object sender, DeviceAddedEventArgs e)
         {
-            if( Devices.TryGetValue(e.Device.Index, out var dev) )
+            if (Devices.TryGetValue(e.Device.Index, out var dev))
             {
                 if (!dev.Name.Equals(e.Device.Name, StringComparison.Ordinal))
                 {
@@ -364,6 +371,50 @@ namespace NogasmChart
             foreach (var dev in Devices.Where(dev => dev.Value.Linears.Any() && dev.Value.Enabled && dev.Value.IsConnected))
             {
                 dev.Value.Device.SendLinearCmd(aDuration, aPosition);
+            }
+        }
+
+        public void SendOscillateCmd(double aSpeed)
+        {
+            // Force the range
+            aSpeed = Math.Min(Math.Max(aSpeed, 0.0), 1.0);
+            lock (_oscillationLock)
+            {
+                if (aSpeed > NogasmChartProperties.Default.LinearSpeedThreshold)
+                {
+                    _oscillationSpeed = aSpeed;
+                    if (_oscillationTimer == null)
+                    {
+                        _oscillationTimer = new Timer(OscillateTimerCallback, null, 0, Timeout.Infinite);
+                    }
+                }
+                else
+                {
+                    _oscillationSpeed = 0;
+                    _oscillationTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+                    _oscillationTimer = null;
+                }
+            }
+        }
+
+        private void OscillateTimerCallback(object state)
+        {
+            lock (_oscillationLock)
+            {
+                if (_client == null)
+                    _oscillationTimer = null;
+                if (_oscillationTimer == null)
+                    return;
+
+                var durationRange = Math.Max(NogasmChartProperties.Default.LinearDurationMax - NogasmChartProperties.Default.LinearDurationMin, 0);
+                var durationMod = (uint)Math.Round((1 - _oscillationSpeed) * durationRange);
+                _oscillationDirection = !_oscillationDirection;
+                var duration = durationMod + NogasmChartProperties.Default.LinearDurationMin;
+                SendLinearCmd(
+                    (uint)Math.Round(duration / NogasmChartProperties.Default.LinearTimeMultiplier),
+                    Math.Min(Math.Max(_oscillationDirection ? NogasmChartProperties.Default.LinearPositionMax :
+                        NogasmChartProperties.Default.LinearPositionMin, 0.0), 1.0));
+                _oscillationTimer.Change(duration, Timeout.Infinite);
             }
         }
     }
