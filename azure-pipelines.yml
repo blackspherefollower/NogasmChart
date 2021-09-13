@@ -24,6 +24,7 @@ jobs:
         #   buildConfiguration: Debug
         Release:
           buildConfiguration: Release
+      maxParallel: 1
     steps:
       - template: build/build-start.yml
         parameters:
