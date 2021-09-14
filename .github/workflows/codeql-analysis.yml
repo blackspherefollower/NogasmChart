@@ -56,7 +56,7 @@ jobs:
       uses: microsoft/setup-msbuild@v1.0.2
   
     - name: Build
-      run: msbuild NogasmChart.sln
+      run: msbuild NogasmChart.sln /t:Restore /p:UseSharedCompilation=false
       
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
