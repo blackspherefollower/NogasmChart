@@ -2,9 +2,15 @@ steps:
   - template: ./setup-variables.yml
     parameters:
       platform: ${{ parameters.platform }}
-  - task: NuGetToolInstaller@0
-    displayName: "Install Platform Dependencies"
-  - task: NuGetCommand@2
-    displayName: "Restore Project"
+      
+  - task: UseDotNet@2
+    displayName: 'Use .NET Core sdk 5'
     inputs:
-      restoreSolution: '$(solution)'
+      packageType: 'sdk'
+      version: '5.0.x'
+
+  - task: DotNetCoreCLI@2
+    displayName: 'dotnet restore'
+    inputs:
+      command: restore
+      projects: '**/*.csproj'
