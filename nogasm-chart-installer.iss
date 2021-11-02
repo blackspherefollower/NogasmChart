@@ -27,9 +27,9 @@ LicenseFile=LICENSE
 Name: "{localappdata}\NogasmChart"
 
 [Files]
-Source: "NogasmChart\bin\{#Configuration}\*.exe"; DestDir: "{app}"
-Source: "NogasmChart\bin\{#Configuration}\*.dll"; DestDir: "{app}"
-Source: "NogasmChart\bin\{#Configuration}\*.config"; DestDir: "{app}"
+Source: "NogasmChart\bin\{#Configuration}\net5.0-windows\*.exe"; DestDir: "{app}"
+Source: "NogasmChart\bin\{#Configuration}\net5.0-windows\*.dll"; DestDir: "{app}"
+Source: "NogasmChart\bin\{#Configuration}\net5.0-windows\*.config"; DestDir: "{app}"
 Source: "README.md"; DestDir: "{app}"; DestName: "Readme.txt"
 Source: "LICENSE"; DestDir: "{app}"; DestName: "License.txt"
 
