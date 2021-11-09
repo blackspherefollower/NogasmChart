@@ -59,6 +59,7 @@ jobs:
       - task: DotNetCoreCLI@2
         inputs:
           command: 'publish'
+          publishWebProjects: false
           arguments: ' -r win-x64 -c $(buildConfiguration)'
           displayName: 'dotnet publish -r win-x64 -c $(buildConfiguration)'
       - task: PowerShell@2
