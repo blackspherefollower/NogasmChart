@@ -58,9 +58,9 @@ jobs:
           script: 'type $(Build.SourcesDirectory)\NogasmChart\Properties\AssemblyInfo.cs'
       - task: DotNetCoreCLI@2
         inputs:
-          command: 'build'
-          arguments: '--configuration $(buildConfiguration)'
-          displayName: 'dotnet build $(buildConfiguration)'
+          command: 'publish'
+          arguments: ' -r win-x64 -c $(buildConfiguration)'
+          displayName: 'dotnet publish -r win-x64 -c $(buildConfiguration)'
       - task: PowerShell@2
         displayName: "Build Installer"
         inputs:
@@ -87,7 +87,7 @@ jobs:
       - Windows
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
     pool:
-      vmImage: 'windows-2019'
+      vmImage: 'windows-latest'
     steps:
       - template: build/setup-variables.yml
       - task: DownloadPipelineArtifact@1
