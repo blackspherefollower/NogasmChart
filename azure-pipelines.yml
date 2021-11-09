@@ -58,10 +58,15 @@ jobs:
           script: 'type $(Build.SourcesDirectory)\NogasmChart\Properties\AssemblyInfo.cs'
       - task: DotNetCoreCLI@2
         inputs:
+          command: 'build'
+          arguments: '-c $(buildConfiguration)'
+          displayName: 'dotnet build $(buildConfiguration)'
+      - task: DotNetCoreCLI@2
+        inputs:
           command: 'publish'
           publishWebProjects: false
-          arguments: ' -r win-x64 -c $(buildConfiguration)'
-          displayName: 'dotnet publish -r win-x64 -c $(buildConfiguration)'
+          arguments: '-r win-x64 -c $(buildConfiguration)'
+          displayName: 'dotnet publish $(buildConfiguration)'
       - task: PowerShell@2
         displayName: "Build Installer"
         inputs:
