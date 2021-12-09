@@ -69,7 +69,7 @@ jobs:
         inputs:
           command: 'publish'
           publishWebProjects: false
-          arguments: '-r win-x64 -c $(buildConfiguration) -o published'
+          arguments: '-r win-x64 -c $(buildConfiguration) -o bin\x64\$(buildConfiguration)\net5.0-windows\win-x64\publish'
           displayName: 'dotnet publish $(buildConfiguration)'
       - task: PowerShell@2
         displayName: "Build Installer"
