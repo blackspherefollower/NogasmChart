@@ -56,11 +56,21 @@ jobs:
       - task: CmdLine@2
         inputs:
           script: 'type $(Build.SourcesDirectory)\NogasmChart\Properties\AssemblyInfo.cs'
+      - task: UseDotNet@2
+        inputs:
+          packageType: 'sdk'
+          version: '5.0.x'
       - task: DotNetCoreCLI@2
         inputs:
           command: 'build'
-          arguments: '--configuration $(buildConfiguration)'
+          arguments: '-c $(buildConfiguration)'
           displayName: 'dotnet build $(buildConfiguration)'
+      - task: DotNetCoreCLI@2
+        inputs:
+          command: 'publish'
+          publishWebProjects: false
+          arguments: '-r win-x64 -c $(buildConfiguration) -o $(Build.SourcesDirectory)\NogasmChart\bin\x64\$(buildConfiguration)\net5.0-windows\win-x64\publish'
+          displayName: 'dotnet publish $(buildConfiguration)'
       - task: PowerShell@2
         displayName: "Build Installer"
         inputs:
@@ -87,7 +97,7 @@ jobs:
       - Windows
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
     pool:
-      vmImage: 'windows-2019'
+      vmImage: 'windows-latest'
     steps:
       - template: build/setup-variables.yml
       - task: DownloadPipelineArtifact@1
