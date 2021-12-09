@@ -27,7 +27,7 @@ LicenseFile=LICENSE
 Name: "{localappdata}\NogasmChart"
 
 [Files]
-Source: "NogasmChart\bin\{#Configuration}\net5.0-windows\win-x64\publish\*"; DestDir: "{app}"
+Source: "NogasmChart\bin\x64\{#Configuration}\net5.0-windows\win-x64\publish\*"; DestDir: "{app}"
 Source: "README.md"; DestDir: "{app}"; DestName: "Readme.txt"
 Source: "LICENSE"; DestDir: "{app}"; DestName: "License.txt"
 
