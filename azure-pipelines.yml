@@ -56,6 +56,10 @@ jobs:
       - task: CmdLine@2
         inputs:
           script: 'type $(Build.SourcesDirectory)\NogasmChart\Properties\AssemblyInfo.cs'
+      - task: UseDotNet@2
+        inputs:
+          packageType: 'sdk'
+          version: '5.0.x'
       - task: DotNetCoreCLI@2
         inputs:
           command: 'build'
