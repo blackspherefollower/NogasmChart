@@ -34,7 +34,7 @@ Source: "vc_redist.x64.exe"; DestDir: {tmp}; Flags: deleteafterinstall
 
 [Run]
 Filename: {tmp}\vc_redist.x64.exe; \
-  StatusMsg: "Installing VC++ 2015-2022 Redistributables..." \
+  StatusMsg: "Installing VC++ 2015-2022 Redistributables..."; \
   Parameters: "/q /norestart"; \
   Check: VS14RedistNeedsInstall; \
   Flags: waituntilterminated
