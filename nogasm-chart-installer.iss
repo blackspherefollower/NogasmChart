@@ -113,7 +113,7 @@ begin
   if RegQueryDWordValue(HKEY_LOCAL_MACHINE,
        'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64', 'Major', Major) then
   begin
-    Log('VC Redist Version found:' + Major);
+    Log('VC Redist Version found: ' + IntToStr(Major));
     Result := (Major >= 14);
   end
   else 
