@@ -82,6 +82,13 @@ jobs:
           cleanDestinationFolder: true
           overwriteExistingFiles: false
       - task: PowerShell@2
+        displayName: "Get VC Redist"
+        inputs:
+          targetType: inline
+          script: |
+            $WebClient = New-Object System.Net.WebClient
+            $WebClient.DownloadFile( "https://aka.ms/vs/17/release/vc_redist.x64.exe", "vc_redist.x64.exe" )
+      - task: PowerShell@2
         displayName: "Build Installer"
         inputs:
           targetType: inline
