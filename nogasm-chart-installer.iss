@@ -22,6 +22,7 @@ SolidCompression=yes
 OutputBaseFilename=nogasm-chart-installer
 OutputDir=.\installer
 LicenseFile=LICENSE
+ArchitecturesInstallIn64BitMode=x64
 
 [Dirs]
 Name: "{localappdata}\NogasmChart"
