@@ -13,7 +13,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Buttplug" Version="2.0.6" />
-    <PackageReference Include="Google.Protobuf" Version="3.21.9" />
+    <PackageReference Include="Google.Protobuf" Version="3.21.12" />
     <PackageReference Include="InteractiveDataDisplay.WPF" Version="1.0.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
