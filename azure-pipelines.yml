@@ -59,7 +59,7 @@ jobs:
       - task: UseDotNet@2
         inputs:
           packageType: 'sdk'
-          version: '5.0.x'
+          version: '7.0.x'
       - task: DotNetCoreCLI@2
         inputs:
           command: 'build'
@@ -77,8 +77,8 @@ jobs:
           script: Get-ChildItem -Path '$(Build.SourcesDirectory)\NogasmChart\bin\x64\$(buildConfiguration)' -recurse
       - task: ExtractFiles@1
         inputs:
-          archiveFilePatterns: '$(Build.SourcesDirectory)\NogasmChart\bin\x64\$(buildConfiguration)\net5.0-windows\win-x64\win-x64.zip'
-          destinationFolder: '$(Build.SourcesDirectory)\NogasmChart\bin\x64\$(buildConfiguration)\net5.0-windows\win-x64\publish'
+          archiveFilePatterns: '$(Build.SourcesDirectory)\NogasmChart\bin\x64\$(buildConfiguration)\net7.0-windows\win-x64\win-x64.zip'
+          destinationFolder: '$(Build.SourcesDirectory)\NogasmChart\bin\x64\$(buildConfiguration)\net7.0-windows\win-x64\publish'
           cleanDestinationFolder: true
           overwriteExistingFiles: false
       - task: PowerShell@2
