@@ -28,7 +28,7 @@ ArchitecturesInstallIn64BitMode=x64
 Name: "{localappdata}\NogasmChart"
 
 [Files]
-Source: "NogasmChart\bin\x64\{#Configuration}\net5.0-windows\win-x64\publish\*"; DestDir: "{app}"
+Source: "NogasmChart\bin\x64\{#Configuration}\net7.0-windows\win-x64\publish\*"; DestDir: "{app}"
 Source: "README.md"; DestDir: "{app}"; DestName: "Readme.txt"
 Source: "LICENSE"; DestDir: "{app}"; DestName: "License.txt"
 Source: "vc_redist.x64.exe"; DestDir: {tmp}; Flags: deleteafterinstall
