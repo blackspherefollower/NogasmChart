@@ -59,7 +59,7 @@ jobs:
       - task: UseDotNet@2
         inputs:
           packageType: 'sdk'
-          version: '7.0.x'
+          version: '7.x'
       - task: DotNetCoreCLI@2
         inputs:
           command: 'build'
@@ -69,7 +69,7 @@ jobs:
         inputs:
           command: 'publish'
           publishWebProjects: false
-          arguments: '-r win-x64 -c $(buildConfiguration) -o $(Build.SourcesDirectory)\NogasmChart\bin\x64\$(buildConfiguration)\net5.0-windows\win-x64'
+          arguments: '-r win-x64 -c $(buildConfiguration) -o $(Build.SourcesDirectory)\NogasmChart\bin\x64\$(buildConfiguration)\net7.0-windows\win-x64'
           displayName: 'dotnet publish $(buildConfiguration)'
       - task: PowerShell@2
         inputs:
