@@ -4,10 +4,10 @@ steps:
       platform: ${{ parameters.platform }}
       
   - task: UseDotNet@2
-    displayName: 'Use .NET Core sdk 5'
+    displayName: 'Use .NET Core sdk 7'
     inputs:
       packageType: 'sdk'
-      version: '5.0.x'
+      version: '7.x'
 
   - task: DotNetCoreCLI@2
     displayName: 'dotnet restore'
