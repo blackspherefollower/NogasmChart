@@ -25,13 +25,13 @@ namespace NogasmChart
         public SettingsDialog()
         {
             InitializeComponent();
-            Settings.ItemsSource = NogasmChartProperties.Default.Properties;
-            NogasmChartProperties.Default.PropertyChanged += (sender, args) => Settings.Items.Refresh();
+            Settings.ItemsSource = NogasmChartProperties.Default;
+            Properties.Settings.Default.PropertyChanged += (sender, args) => Settings.Items.Refresh();
         }
 
         private void TextBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            // todo: implement updates
+            NogasmChartProperties.Default.Save();
         }
     }
 }

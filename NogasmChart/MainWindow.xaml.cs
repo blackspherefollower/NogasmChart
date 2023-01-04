@@ -105,7 +105,7 @@ namespace NogasmChart
                     OutputGraph.Plot(outtime, output);
                 });
 
-                ButtplugPanel.SendVibrateCmd(e.Intensity);
+                ButtplugPanel.SendScalarCmd(e.Intensity);
                 ButtplugPanel.SendRotateCmd(e.Intensity, true);
                 ButtplugPanel.SendOscillateCmd(e.Intensity);
             }
