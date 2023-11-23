@@ -95,7 +95,6 @@ jobs:
           script: |
             $Env:CONFIGURATION = "$(buildConfiguration)"
             $Env:BUILD_VERSION = "$(gitVersion)"
-            cinst -y --no-progress innosetup
             ISCC nogasm-chart-installer.iss
             move installer\nogasm-chart-installer.exe installer\$(cliBuildName)-installer.exe
       - task: CopyFiles@2
