@@ -40,10 +40,14 @@ namespace NogasmChart
                 Enabled = true;
                 IsConnected = true;
                 Device = aDev ?? throw new ArgumentNullException(nameof(aDev));
-                foreach (var a in Device.MessageAttributes.ScalarCmd)
+                if (Device.MessageAttributes.ScalarCmd != null)
                 {
-                    Scalars.Add(a.Index, (a.ActuatorType, true));
+                    foreach (var a in Device.MessageAttributes.ScalarCmd)
+                    {
+                        Scalars.Add(a.Index, (a.ActuatorType, true));
+                    }
                 }
+
                 foreach (var a in Device.RotateAttributes)
                 {
                     Rotators.Add(a.Index, true);
