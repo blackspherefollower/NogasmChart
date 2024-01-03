@@ -31,6 +31,7 @@ namespace NogasmChart
         private string logFile;
         private long startTime;
         private readonly Regex nogasmRegex = new Regex(@"^(-?\d+(\.\d+)?),(\d+(\.\d+)?),(\d+(\.\d+)?)$");
+        private readonly Regex nogasmRegex2 = new Regex(@"^\d+ ?,\d+ ?,(-?\d+(\.\d+)?) ?,(\d+(\.\d+)?) ?,(\d+(\.\d+)?) ?,(-?\d+(\.\d+)?) ?$");
         private readonly Regex logRegex = new Regex(@"^(\d+):(nogasm:|user:orgasm|output:)(.*)$");
         private DateTimeOffset _last_input = DateTimeOffset.Now;
         private DateTimeOffset _last_output = DateTimeOffset.Now;
@@ -210,6 +211,8 @@ namespace NogasmChart
                 Console.WriteLine(text);
                 w?.WriteLine(text);
                 var m = nogasmRegex.Match(line);
+                if (!m.Success)
+                    m = nogasmRegex2.Match(line);
                 if (m.Success)
                 {
                     average.Add(Convert.ToDouble(m.Groups[5].Value, new NumberFormatInfo()));
@@ -362,6 +365,8 @@ namespace NogasmChart
                             {
                                 case "nogasm:":
                                     var m2 = nogasmRegex.Match(m.Groups[3].Value);
+                                    if (!m2.Success)
+                                        m2 = nogasmRegex2.Match(m.Groups[3].Value);
                                     if (m2.Success)
                                     {
                                         average.Add(Convert.ToDouble(m2.Groups[5].Value, new NumberFormatInfo()));
