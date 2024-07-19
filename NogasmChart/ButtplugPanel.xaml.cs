@@ -360,13 +360,14 @@ namespace NogasmChart
                     return;
 
                 var durationRange = Math.Max(NogasmChartProperties.Default["LinearDurationMax"].IntValue - NogasmChartProperties.Default["LinearDurationMin"].IntValue, 0);
-                var durationMod = (uint)Math.Round((1 - _oscillationSpeed) * durationRange);
+                var durationMod = (uint)Math.Round((1.0 - _oscillationSpeed) * durationRange);
                 _oscillationDirection = !_oscillationDirection;
                 var duration = durationMod + NogasmChartProperties.Default["LinearDurationMin"].IntValue;
+                
                 SendLinearCmd(
                     (uint)Math.Round(duration / NogasmChartProperties.Default["LinearTimeMultiplier"].DoubleValue),
-                    Math.Min(Math.Max(_oscillationDirection ? NogasmChartProperties.Default["LinearDurationMax"].IntValue :
-                        NogasmChartProperties.Default["LinearDurationMin"].IntValue, 0.0), 1.0));
+                    Math.Min(Math.Max(_oscillationDirection ? NogasmChartProperties.Default["LinearPositionMax"].DoubleValue :
+                        NogasmChartProperties.Default["LinearPositionMin"].DoubleValue, 0.0), 1.0));
                 _oscillationTimer.Change(duration, Timeout.Infinite);
             }
         }
