@@ -363,12 +363,12 @@ namespace NogasmChart
                 var durationMod = (uint)Math.Round((1.0 - _oscillationSpeed) * durationRange);
                 _oscillationDirection = !_oscillationDirection;
                 var duration = durationMod + NogasmChartProperties.Default["LinearDurationMin"].IntValue;
-                
+
                 SendLinearCmd(
-                    (uint)Math.Round(duration / NogasmChartProperties.Default["LinearTimeMultiplier"].DoubleValue),
+                    (uint)duration,
                     Math.Min(Math.Max(_oscillationDirection ? NogasmChartProperties.Default["LinearPositionMax"].DoubleValue :
                         NogasmChartProperties.Default["LinearPositionMin"].DoubleValue, 0.0), 1.0));
-                _oscillationTimer.Change(duration, Timeout.Infinite);
+                _oscillationTimer.Change((long)Math.Round(duration * NogasmChartProperties.Default["LinearDurationDelayMultiplier"].DoubleValue), Timeout.Infinite);
             }
         }
     }
