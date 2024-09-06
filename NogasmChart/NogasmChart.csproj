@@ -12,7 +12,7 @@
     <EmbeddedResource Include="secrets.json" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Buttplug" Version="3.0.1" />
+    <PackageReference Include="Buttplug" Version="4.0.0" />
     <PackageReference Include="Buttplug.Client.Connectors.WebsocketConnector" Version="3.0.1" />
     <PackageReference Include="InteractiveDataDisplay.WPF" Version="1.0.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
