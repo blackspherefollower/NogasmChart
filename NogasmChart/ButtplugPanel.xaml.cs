@@ -10,7 +10,6 @@ using System.Windows.Controls;
 using System.Windows.Navigation;
 using Buttplug;
 using Buttplug.Client;
-using Buttplug.Client.Connectors.WebsocketConnector;
 using Buttplug.Core;
 using Buttplug.Core.Messages;
 
