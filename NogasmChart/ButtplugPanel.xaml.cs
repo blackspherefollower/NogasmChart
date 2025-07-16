@@ -299,6 +299,10 @@ namespace NogasmChart
             {
                 var subCmds = dev.Value.Scalars.Where((attr) => attr.Value.Item2).Select((attr) =>
                     new ScalarCmd.ScalarSubcommand(attr.Key, aSpeed, attr.Value.Item1)).ToList();
+                if (dev.Value.Linears.Any())
+                {
+                    subCmds = subCmds.Where(c => c.ActuatorType != ActuatorType.Oscillate).ToList();
+                }
                 if (subCmds.Any())
                 {
                     dev.Value.Device.ScalarAsync(subCmds);
